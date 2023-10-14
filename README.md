@@ -126,20 +126,6 @@ Output from example:
 ## Examples:
 To easy ilustrate i created easy [android app](https://github.com/GHRik/SjpAPI/blob/main/examplesCode/), so you are free to test it:
 
-##### When you input empty string OR is problem with connect to site(no internet connection):
-![Empty_string](https://github.com/GHRik/SjpAPI/blob/main/examplesCode/EmptyStringExample.PNG?raw=true)
-
-##### Input: "zamek":
-![Zamek_example](https://github.com/GHRik/SjpAPI/blob/main/examplesCode/ZamekExample.PNG?raw=true)
-
-##### Not found in dictionary:
-![Not_find_in_dictionary_Example](https://github.com/GHRik/SjpAPI/blob/main/examplesCode/NotFoundInDictionaryExample.PNG?raw=true)
-
-
-##### BAD FORMATING site:
-![Bad_Format](https://github.com/GHRik/SjpAPI/blob/main/examplesCode/BadFormat.PNG?raw=true)
-
-
 <a name="lic">.</a>
 ## License
 Apache 
