@@ -8,16 +8,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static sjpapi.api.StringUtils.htmlToPolishLetter;
 
 public class SjpWrapper {
 
-    public String getWrapped (String curlOutput) throws JSONException, UnsupportedEncodingException {
+    public String getWrapped(String curlOutput) throws JSONException, UnsupportedEncodingException {
         List<List<String>> wordsFromCurlOutput = regexForInfo(curlOutput);
         return translateArrayToJSON(wordsFromCurlOutput);
-
     }
 
-    private List<List<String>> regexForInfo (String curlOutput) {
+    public SjpJSON getWrappedJSON(String curlOutput) throws JSONException, UnsupportedEncodingException {
+        List<List<String>> wordsFromCurlOutput = regexForInfo(curlOutput);
+        return translateArrayToSjpJSON(wordsFromCurlOutput);
+    }
+
+    private List<List<String>> regexForInfo(String curlOutput) {
 
         List<List<String>> wrappedCurl = new ArrayList<>();
         if (Boolean.TRUE.equals(isInDictionary(curlOutput))) {
@@ -39,38 +46,66 @@ public class SjpWrapper {
 
     }
 
-    private Boolean isInDictionary( String curlOutput ) {
+    private Boolean isInDictionary(String curlOutput) {
 
         return !curlOutput.contains("nie występuje w słowniku");
     }
 
-    private String translateArrayToJSON(List<List<String>> wordsFromCurlOutput ) throws JSONException, UnsupportedEncodingException {
+    private String translateArrayToJSON(List<List<String>> wordsFromCurlOutput) throws JSONException, UnsupportedEncodingException {
         String allWrappedWord;
         JSONObject jsonObject = new JSONObject();
         if (wordsFromCurlOutput.isEmpty()) {
             jsonObject.put("name", "-1");
-            jsonObject.put("count","-1");
-            jsonObject.put("variant","-1");
+            jsonObject.put("count", "-1");
+            jsonObject.put("variant", "-1");
             jsonObject.put("canBeUsed", false);
             jsonObject.put("meaning", "-1");
-        }
-        else
-        {
-            jsonObject.put("name",wordsFromCurlOutput.get(0).get(0));
-            jsonObject.put("count",wordsFromCurlOutput.size());
-            for( int i = 0; i < wordsFromCurlOutput.size(); i++){
-                jsonObject.put("canBeUsed"+"["+i+"]", translateCanBeUsed(wordsFromCurlOutput.get(i).get(1)));
-                jsonObject.put("variant"+"["+i+"]", StringUtils.htmlToPolishLetter(wordsFromCurlOutput.get(i).get(2)));
-                jsonObject.put("meaning"+"["+i+"]", wrappedDescription(wordsFromCurlOutput.get(i).get(3)));
+        } else {
+            jsonObject.put("name", wordsFromCurlOutput.get(0).get(0));
+            jsonObject.put("count", wordsFromCurlOutput.size());
+            for (int i = 0; i < wordsFromCurlOutput.size(); i++) {
+                jsonObject.put("canBeUsed" + "[" + i + "]", translateCanBeUsed(wordsFromCurlOutput.get(i).get(1)));
+                jsonObject.put("variant" + "[" + i + "]", htmlToPolishLetter(wordsFromCurlOutput.get(i).get(2)));
+                jsonObject.put("meaning" + "[" + i + "]", wrappedDescription(wordsFromCurlOutput.get(i).get(3)));
             }
         }
         allWrappedWord = jsonObject.toString();
         return allWrappedWord;
     }
 
-    private Boolean translateCanBeUsed(String oneParamOfWordFromCurl){
-        return !oneParamOfWordFromCurl.startsWith("niedopuszczalne");
+    public SjpJSON translateArrayToSjpJSON(List<List<String>> wordsFromCurlOutput) throws JSONException, UnsupportedEncodingException {
+        SjpJSON sjpJSON = SjpJSON.empty();
+        if (wordsFromCurlOutput.isEmpty()) {
+            return sjpJSON;
+        } else {
+            sjpJSON = new SjpJSON(
+                    wordsFromCurlOutput.get(0).get(0),
+                    wordsFromCurlOutput.size(),
+                    wordsFromCurlOutput.stream()
+                            .map(word -> word.get(1))
+                            .map(this::translateCanBeUsed)
+                            .toList(),
+                    wordsFromCurlOutput.stream()
+                            .map(word -> word.get(2))
+                            .map(word -> {
+                                try {
+                                    return htmlToPolishLetter(word);
+                                } catch (UnsupportedEncodingException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            })
+                            .toList(),
+                    wordsFromCurlOutput.stream()
+                            .map(word -> word.get(3))
+                            .map(this::wrappedDescription)
+                            .toList()
+            );
+        }
+        return sjpJSON;
+    }
 
+    private Boolean translateCanBeUsed(String oneParamOfWordFromCurl) {
+        return !oneParamOfWordFromCurl.startsWith("niedopuszczalne");
     }
 
 
@@ -78,12 +113,11 @@ public class SjpWrapper {
         return !StringUtils.hasSpecyficHTMLTags(description) && !description.contentEquals("KOMENTARZE:") && !description.contentEquals("POWIĄZANE HASŁA:");
     }
 
-    private String wrappedDescription( String description ) {
+    private String wrappedDescription(String description) {
         String desc = description;
-        if (!isDescriptionGoodFormat(desc)){
+        if (!isDescriptionGoodFormat(desc)) {
             desc = "BAD FORMAT";
-        }
-        else {
+        } else {
             desc = changeBrTagOnNewLine(desc);
             desc = StringUtils.unescapeHTML(desc, 0);
         }
@@ -91,8 +125,8 @@ public class SjpWrapper {
         return desc;
     }
 
-    private String changeBrTagOnNewLine(String descritption ) {
-        descritption = descritption.replaceAll("(?i)<br */?>","\n");
+    private String changeBrTagOnNewLine(String descritption) {
+        descritption = descritption.replaceAll("(?i)<br */?>", "\n");
         return descritption;
     }
 

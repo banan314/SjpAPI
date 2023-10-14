@@ -16,11 +16,21 @@ public class SjpHelper {
 
         String json = "EMPTY";
 
-        if (validator.isCurlWithWordValidate(curl)) {
+        if (Boolean.TRUE.equals(validator.isCurlWithWordValidate(curl))) {
             json = wrapper.getWrapped(curl);
         }
+
         return json;
     }
 
 
+    public static SjpJSON translateFromJSONToSjpJSON(String curl) throws UnsupportedEncodingException {
+        SjpJSON sjpJSON = SjpJSON.empty();
+
+        if (Boolean.TRUE.equals(validator.isCurlWithWordValidate(curl))) {
+            sjpJSON = wrapper.getWrappedJSON(curl);
+        }
+
+        return sjpJSON;
+    }
 }
