@@ -18,12 +18,9 @@ public class SjpAPI {
         return json;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "UnusedReturnValue"})
     public static SjpJSON getWordJSON(String word) throws IOException, JSONException {
-        String json;
-        String wordWithoutSpecialChar;
-        wordWithoutSpecialChar = StringUtils.deleteSpecialChar(word);
-        return SjpHelper.translateFromJSONToSjpJSON(CurlHelper.getOutputFromCurl(wordWithoutSpecialChar));
+        return SjpHelper.translateFromJSONToSjpJSON(CurlHelper.getOutputFromCurl(word));
     }
 
     public static void main(String[] args) {
